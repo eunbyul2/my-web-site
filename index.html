@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>나만의 미니 게임방</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Noto Sans KR", sans-serif;
+        background: linear-gradient(120deg, #f5f7fa 0%, #c3cfe2 100%);
+        margin: 0;
+        padding: 0;
+      }
+      .container {
+        max-width: 420px;
+        margin: 60px auto;
+        background: #fff;
+        border-radius: 18px;
+        box-shadow: 0 6px 24px #e3e3e3;
+        padding: 38px 32px;
+      }
+      h1 {
+        text-align: center;
+        color: #3a8dde;
+        font-size: 2.1rem;
+        margin-bottom: 28px;
+      }
+      .game-list {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        margin-bottom: 24px;
+      }
+      .game-btn {
+        background: linear-gradient(90deg, #3a8dde 60%, #b6e3ff 100%);
+        color: #fff;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 1rem;
+        padding: 10px 18px;
+        border: none;
+        cursor: pointer;
+        box-shadow: 0 2px 8px #e3e3e3;
+        transition: background 0.2s;
+      }
+      .game-btn:hover {
+        background: linear-gradient(90deg, #2d3a4a 60%, #3a8dde 100%);
+      }
+      .game-area {
+        margin-top: 18px;
+        min-height: 180px;
+      }
+      .score-board {
+        margin-top: 18px;
+        font-size: 1.1rem;
+        color: #555;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>나만의 미니 게임방</h1>
+      <div class="game-list">
+        <button class="game-btn" onclick="showGame('reaction')">
+          반응속도 게임
+        </button>
+        <button class="game-btn" onclick="showGame('quiz')">퀴즈 게임</button>
+        <button class="game-btn" onclick="showGame('memory')">
+          기억력 게임
+        </button>
+      </div>
+      <div class="game-area" id="game-area"></div>
+      <div class="score-board" id="score-board"></div>
+    </div>
+    <script>
+      let scores = { reaction: 0, quiz: 0, memory: 0 };
+      let quizIdx = 0;
+      let quizList = [
+        { q: "대한민국의 수도는?", a: "서울" },
+        { q: "3 + 5 = ?", a: "8" },
+        { q: "바나나의 색깔은?", a: "노랑" },
+        { q: "2024년은 무슨 해?", a: "용" },
+      ];
+      let memorySeq = [];
+      let memoryInput = [];
+      function showGame(type) {
+        document.getElementById(
+          "score-board"
+        ).innerText = `현재 점수: ${scores[type]}`;
+        if (type === "reaction") startReactionGame();
+        if (type === "quiz") startQuizGame();
+        if (type === "memory") startMemoryGame();
+      }
+      // 반응속도 게임
+      function startReactionGame() {
+        const area = document.getElementById("game-area");
+        area.innerHTML =
+          '<div style="text-align:center;font-size:1.1rem;">초록색 버튼이 나타나면 최대한 빨리 눌러보세요!</div>';
+        setTimeout(() => {
+          const btn = document.createElement("button");
+          btn.innerText = "지금 눌러!";
+          btn.style.background = "#4caf50";
+          btn.style.color = "#fff";
+          btn.style.fontSize = "1.2rem";
+          btn.style.marginTop = "28px";
+          let start = Date.now();
+          btn.onclick = function () {
+            let ms = Date.now() - start;
+            area.innerHTML = `<div style='text-align:center;font-size:1.2rem;'>반응속도: <b>${ms}ms</b></div>`;
+            if (ms < 400) scores.reaction += 2;
+            else if (ms < 700) scores.reaction += 1;
+            else scores.reaction += 0;
+            document.getElementById(
+              "score-board"
+            ).innerText = `현재 점수: ${scores.reaction}`;
+          };
+          area.appendChild(btn);
+        }, 1200 + Math.random() * 1200);
+      }
+      // 퀴즈 게임
+      function startQuizGame() {
+        const area = document.getElementById("game-area");
+        if (quizIdx >= quizList.length) {
+          area.innerHTML = `<div style='text-align:center;font-size:1.2rem;'>퀴즈 끝! 총 점수: <b>${scores.quiz}</b></div>`;
+          quizIdx = 0;
+          return;
+        }
+        const q = quizList[quizIdx];
+        area.innerHTML = `<div style='font-size:1.1rem;margin-bottom:12px;'>Q${
+          quizIdx + 1
+        }. ${
+          q.q
+        }</div><input type='text' id='quiz-answer' style='width:70%;padding:8px 12px;border-radius:8px;border:1px solid #b6e3ff;'><button class='game-btn' style='margin-left:8px;' onclick='submitQuiz()'>제출</button>`;
+      }
+      function submitQuiz() {
+        const ans = document.getElementById("quiz-answer").value.trim();
+        if (ans) {
+          if (ans === quizList[quizIdx].a) {
+            scores.quiz += 2;
+            alert("정답!");
+          } else {
+            scores.quiz += 0;
+            alert("오답! 정답은 " + quizList[quizIdx].a);
+          }
+          quizIdx++;
+          startQuizGame();
+          document.getElementById(
+            "score-board"
+          ).innerText = `현재 점수: ${scores.quiz}`;
+        }
+      }
+      // 기억력 게임
+      function startMemoryGame() {
+        const area = document.getElementById("game-area");
+        memorySeq = [];
+        memoryInput = [];
+        let seqLen = 4 + Math.floor(Math.random() * 3);
+        for (let i = 0; i < seqLen; i++) {
+          memorySeq.push(Math.floor(Math.random() * 10));
+        }
+        area.innerHTML = `<div style='font-size:1.1rem;margin-bottom:12px;'>아래 숫자 시퀀스를 3초간 기억하세요!</div><div style='font-size:1.5rem;color:#3a8dde;font-weight:700;margin-bottom:18px;'>${memorySeq.join(
+          " "
+        )}</div>`;
+        setTimeout(() => {
+          area.innerHTML = `<div style='font-size:1.1rem;margin-bottom:12px;'>숫자를 순서대로 입력하세요</div><input type='text' id='memory-answer' style='width:70%;padding:8px 12px;border-radius:8px;border:1px solid #b6e3ff;'><button class='game-btn' style='margin-left:8px;' onclick='submitMemory()'>제출</button>`;
+        }, 3000);
+      }
+      function submitMemory() {
+        const ans = document.getElementById("memory-answer").value.trim();
+        if (ans) {
+          if (ans === memorySeq.join(" ")) {
+            scores.memory += 2;
+            alert("정답!");
+          } else {
+            scores.memory += 0;
+            alert("오답! 정답은 " + memorySeq.join(" "));
+          }
+          document.getElementById(
+            "score-board"
+          ).innerText = `현재 점수: ${scores.memory}`;
+          showGame("memory");
+        }
+      }
+    </script>
+  </body>
+</html>
